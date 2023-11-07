@@ -68,9 +68,20 @@ public class TechWebCrawler implements Runnable{
                         String author = articles.select(".river-byline__authors").text();
                         String content = articles.select(".post-block__content").text();
 
-                        //creates a new object everytime for each link
-                        TechArticles techArticle = new TechArticles(_threadID,title, urls, date, author,content);
-                        articlesList.add(techArticle);
+                          // original date format versus new date
+                        SimpleDateFormat originalDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+                        SimpleDateFormat newDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+                        try {
+                            // formatting date
+                            Date dateObj = originalDate.parse(date);
+                            String formattedDate = newDate.format(dateObj);
+
+                            //creates a new object everytime for each link
+                            TechArticles techArticle = new TechArticles(_threadID, title, urls, formattedDate, author, content);
+                            articlesList.add(techArticle);
+                        } catch(ParseException e){
+                            e.printStackTrace();
+                        }
 
                     }
                     //displays the articles information
@@ -78,7 +89,7 @@ public class TechWebCrawler implements Runnable{
                     System.out.println("Thread ID: " + art.get_thread());
                     System.out.println("Title: " + art.get_title());
                     System.out.println("URL: " + art.get_url());
-                    System.out.println("Date: " + art.get_date());
+                    System.out.println("Date and Time: " + art.get_date());
                     System.out.println("Author: " + art.get_author());
                     System.out.println("Content: " + art.get_content());
                 }
