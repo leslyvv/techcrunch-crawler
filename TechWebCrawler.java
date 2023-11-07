@@ -10,7 +10,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class TechWebCrawler implements Runnable{
-    private static final int MAX_DEPTH = 1;
+    private static final int MAX_DEPTH = 2;
     private Thread thread;
     private String _link;
     private ArrayList<String> visitedLink = new ArrayList<String>();
@@ -33,9 +33,10 @@ public class TechWebCrawler implements Runnable{
             Document doc = request(url);
 
             if(doc != null){
-                for(Element link: doc.select(".post-block__title__link[href]")){
+                // gets all links within class a
+                for(Element link: doc.select(".a[href]")){
                     String next_link = link.absUrl("href");
-                    if(visitedLink.contains(next_link)==false){
+                    if(!visitedLink.contains(next_link)){
                         crawl(level+1, next_link);
                     }
                     }
@@ -46,9 +47,11 @@ public class TechWebCrawler implements Runnable{
     private Document request(String url){
 
         try {
+            //fetches and parses a HTML file
             Connection connect = Jsoup.connect(url);
             Document doc = connect
                     .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
+                    .cookie("auth", "token")
                     .timeout(3000)
                     .get();
             //checks if connection is successful
@@ -56,9 +59,8 @@ public class TechWebCrawler implements Runnable{
                 // retrieves all content following under the class post_block
                 Elements articleContent = doc.select(".post-block");
 
-
                     //get all links on doc
-                    //title and link
+                    //title, link, date,author, content
                     for (Element articles : articleContent) {
 
                         // retrieving all the content in the format of a string
