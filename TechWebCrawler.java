@@ -5,12 +5,17 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-
+import java.text.ParseException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class TechWebCrawler implements Runnable{
     private static final int MAX_DEPTH = 2;
+    private static final int MAX_THREADS = 4;
+    private final ExecutorService threadPool = Executors.newFixedThreadPool(MAX_THREADS);
     private Thread thread;
     private String _link;
     private ArrayList<String> visitedLink = new ArrayList<String>();
@@ -33,21 +38,22 @@ public class TechWebCrawler implements Runnable{
             Document doc = request(url);
 
             if(doc != null){
-                // gets all links within class a
-                for(Element link: doc.select(".a[href]")){
+                // gets all anchor elements
+                Elements links = doc.select(".a[href]");
+                for(Element link: links){
                     String next_link = link.absUrl("href");
                     if(!visitedLink.contains(next_link)){
-                        crawl(level+1, next_link);
+                    // new crawling tasks submitted to the thread pool
+                      threadPool.execute(() -> crawl(level + 1, next_link));
                     }
                     }
             }
         }
     }
-    //requesting of an URL
+    //requesting of a URL
     private Document request(String url){
 
         try {
-            //fetches and parses a HTML file
             Connection connect = Jsoup.connect(url);
             Document doc = connect
                     .userAgent("Mozilla/5.0 (Windows; U; WindowsNT 5.1; en-US; rv1.8.1.6) Gecko/20070725 Firefox/2.0.0.6")
@@ -59,35 +65,24 @@ public class TechWebCrawler implements Runnable{
                 // retrieves all content following under the class post_block
                 Elements articleContent = doc.select(".post-block");
 
-                    //get all links on doc
-                    //title, link, date,author, content
-                    for (Element articles : articleContent) {
+                // retrieves title, urls, author, content, date
+                for (Element articles : articleContent) {
 
-                        // retrieving all the content in the format of a string
-                        String title = articles.select(".post-block__title__link").text();
-                        String urls = articles.select(".post-block__title__link").attr("href");
-                        String date = articles.select("time.river-byline__time").attr("datetime");
-                        String author = articles.select(".river-byline__authors").text();
-                        String content = articles.select(".post-block__content").text();
+                    // retrieving all the content in the format of a string
+                    String title = articles.select(".post-block__title__link").text();
+                    String urls = articles.select(".post-block__title__link").attr("href");
+                    String author = articles.select(".river-byline__authors").text();
+                    String content = articles.select(".post-block__content").text();
+                    String date = articles.select("time.river-byline__time").attr("datetime");
 
-                          // original date format versus new date
-                        SimpleDateFormat originalDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
-                        SimpleDateFormat newDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                        try {
-                            // formatting date
-                            Date dateObj = originalDate.parse(date);
-                            String formattedDate = newDate.format(dateObj);
+                    String formattedDate = formatDate(date);
+                    //creates a new object every time for each link
+                    TechArticles techArticle = new TechArticles(_threadID, title, urls, formattedDate, author, content);
+                    articlesList.add(techArticle);
 
-                            //creates a new object everytime for each link
-                            TechArticles techArticle = new TechArticles(_threadID, title, urls, formattedDate, author, content);
-                            articlesList.add(techArticle);
-                        } catch(ParseException e){
-                            e.printStackTrace();
-                        }
-
-                    }
-                    //displays the articles information
-                for(TechArticles art: articlesList){
+                }
+                //displays the articles information
+                for (TechArticles art : articlesList) {
                     System.out.println("Thread ID: " + art.get_thread());
                     System.out.println("Title: " + art.get_title());
                     System.out.println("URL: " + art.get_url());
@@ -98,13 +93,23 @@ public class TechWebCrawler implements Runnable{
                 // adds the visited url to ensure it's stored
                 visitedLink.add(url);
                 return doc;
-                       }
-            return null;
-        } catch(IOException e){
-            return null;
+            } else {
+                System.out.println("Error in loading page status code is: " + connect.response().statusCode());
+            }
+        } catch(IOException | ParseException e){
+            e.printStackTrace();
         }
 
+        return null;
     }
+    private String formatDate(String date) throws ParseException{
+        // original date format versus new date
+        SimpleDateFormat originalDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
+        SimpleDateFormat newDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        Date dateObj = originalDate.parse(date);
+        return newDate.format(dateObj);
+
+        }
     public Thread getThread(){
         return thread;
     }
