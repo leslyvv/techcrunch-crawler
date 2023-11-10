@@ -12,7 +12,7 @@ public class Main {
         threads.add(new TechWebCrawler("https://techcrunch.com/category/security/", 1));
         threads.add(new TechWebCrawler("https://techcrunch.com/category/startups/",2));
         threads.add(new TechWebCrawler("https://techcrunch.com/category/artificial-intelligence/",3));
-
+        threads.add(new TechWebCrawler("https://techcrunch.com/category/venture/",4));
         //joins the thread
         for(TechWebCrawler w : threads) {
             try {
