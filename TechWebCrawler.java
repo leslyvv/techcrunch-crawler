@@ -106,9 +106,9 @@ public class TechWebCrawler implements Runnable{
         // original date format versus new date
         SimpleDateFormat originalDate = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssXXX");
         SimpleDateFormat newDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        Date dateObj = originalDate.parse(date);
-        return newDate.format(dateObj);
-
+        Date requiredDate = originalDate.parse(date);
+        newDate.setTimeZone(TimeZone.getTimeZone("EST"));
+        return newDate.format(requiredDate);
         }
     public Thread getThread(){
         return thread;
