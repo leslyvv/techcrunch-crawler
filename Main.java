@@ -1,9 +1,8 @@
 package WebCrawler;
 
 import java.io.IOException;
-
 import java.util.ArrayList;
-
+import static WebCrawler.TechWebCrawler.*;
 public class Main {
 
     public static void main(String[] args) {
@@ -22,5 +21,6 @@ public class Main {
                 e.printStackTrace();
             }
         }
+        writeDataToCSV(allThreadsArticlesList);
     }
 }
