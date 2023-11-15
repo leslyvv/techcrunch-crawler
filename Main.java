@@ -22,5 +22,6 @@ public class Main {
             }
         }
         writeDataToCSV(allThreadsArticlesList);
+        writeDataToExcel(allThreadsArticlesList);
     }
 }
