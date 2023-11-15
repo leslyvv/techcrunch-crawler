@@ -1,6 +1,13 @@
 package WebCrawler;
 import java.util.*;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import com.opencsv.CSVWriter;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -103,6 +110,41 @@ public class TechWebCrawler implements Runnable{
         }
 
         return null;
+    }
+    public static void writeDataToExcel(List<TechArticles> articlesList) {
+        String excelFileName = "TechCrunchArticles.xlsx";
+
+        try (Workbook workbook = new XSSFWorkbook()) {
+            Sheet sheet = workbook.createSheet("TechCrunchArticles");
+
+            // Create the header row
+            Row headerRow = sheet.createRow(0);
+            String[] headers = {"Thread ID", "Title of Article", "URL", "Date and Time", "Author Name", "Content Description"};
+            for (int i = 0; i < headers.length; i++) {
+                Cell cell = headerRow.createCell(i);
+                cell.setCellValue(headers[i]);
+            }
+
+            // Populate the data rows
+            int rowNum = 1;
+            for (TechArticles article : articlesList) {
+                Row row = sheet.createRow(rowNum++);
+                row.createCell(0).setCellValue(article.get_thread());
+                row.createCell(1).setCellValue(article.get_title());
+                row.createCell(2).setCellValue(article.get_url());
+                row.createCell(3).setCellValue(article.get_date());
+                row.createCell(4).setCellValue(article.get_author());
+                row.createCell(5).setCellValue(article.get_content());
+            }
+
+            // Write the workbook to the output stream
+            try (FileOutputStream fileOut = new FileOutputStream(excelFileName)) {
+                workbook.write(fileOut);
+                System.out.println("Data is successfully written to " + excelFileName);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
         // writes information to an CSV
     public static void writeDataToCSV(List<TechArticles> articlesList){
